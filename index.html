@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Crop Doctor</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        canvas {
+            width: 100% !important;
+            height: auto !important;
+            border-radius: 0.75rem;
+        }
+
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-out;
+        }
+
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.7;
+            }
+        }
+
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-50 min-h-screen pb-10">
+
+
+    <header class="bg-gradient-to-r from-emerald-700 to-teal-600 text-white py-6 shadow-lg mb-8">
+        <div class="container mx-auto px-4 text-center">
+            <h1 class="text-3xl font-bold italic">AI Crop Doctor</h1>
+            <p class="text-emerald-100 text-sm">Smart AI Crop Disease Detector with Analytics</p>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-4 max-w-7xl h-[calc(100vh-100px)]">
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full">
+
+            <div class="lg:col-span-7 flex flex-col h-full">
+                <div
+                    class="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-200 flex-1 flex flex-col relative">
+
+                    <div id="diagnosis-card"
+                        class="hidden absolute top-4 left-4 right-4 z-10 transition-all duration-500">
+                        <div
+                            class="bg-white/95 backdrop-blur-sm border-l-4 border-emerald-500 p-4 rounded-lg shadow-lg">
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0">
+                                    <span id="status-icon" class="text-2xl">🔍</span>
+                                </div>
+                                <div class="ml-4 text-left">
+                                    <h3 id="diagnosis-title" class="text-lg font-bold text-emerald-900 leading-tight">
+                                        Analyzing...</h3>
+                                    <p id="diagnosis-text" class="text-slate-600 mt-1 text-sm leading-relaxed"></p>
+                                    <div id="treatment-details" class="mt-2 hidden">
+                                        <h4 class="font-bold text-emerald-800 text-xs uppercase tracking-wide mb-1">
+                                            Recommended Treatment</h4>
+                                        <p id="treatment-text"
+                                            class="text-slate-700 text-sm bg-emerald-50 p-2 rounded block"></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div
+                        class="p-6 flex-1 flex flex-col justify-center items-center bg-slate-100 relative overflow-hidden">
+
+
+                        <div id="start-screen" class="text-center w-full max-w-md mx-auto z-0">
+                            <div
+                                class="w-24 h-24 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-md">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-emerald-500" fill="none"
+                                    viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                            </div>
+                            <h2 class="text-2xl font-bold text-slate-800 mb-2">Crop Doctor Scanner</h2>
+                            <p class="text-slate-500 mb-8">Analyze your crops in real-time to detect diseases and get
+                                instant treatment advice.</p>
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <button onclick="initCamera()"
+                                    class="px-6 py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-all shadow-lg hover:shadow-xl active:scale-95 flex flex-col items-center justify-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none"
+                                        viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                    </svg>
+                                    <span>Live Camera</span>
+                                </button>
+
+                                <button onclick="openUploadModal()"
+                                    class="px-6 py-4 bg-white border-2 border-slate-200 text-slate-600 hover:border-emerald-500 hover:text-emerald-600 font-bold rounded-xl transition-all shadow-sm hover:shadow-md active:scale-95 flex flex-col items-center justify-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none"
+                                        viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                    <span>Upload Image</span>
+                                </button>
+                            </div>
+                        </div>
+
+
+                        <div id="scanner-active" class="hidden w-full h-full flex flex-col items-center justify-center">
+                            <div id="webcam-container"
+                                class="relative rounded-xl overflow-hidden shadow-2xl w-full max-w-full h-auto max-h-full flex justify-center bg-black">
+
+                            </div>
+
+                            <div class="absolute bottom-6 left-0 right-0 flex justify-center space-x-4 z-20">
+                                <button onclick="stopCamera()"
+                                    class="px-6 py-3 bg-red-500/90 backdrop-blur hover:bg-red-600 text-white font-bold rounded-full transition-all shadow-lg flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none"
+                                        viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                    End Session
+                                </button>
+
+                                <button onclick="captureImage()"
+                                    class="px-6 py-3 bg-white/90 backdrop-blur hover:bg-white text-slate-800 font-bold rounded-full transition-all shadow-lg flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none"
+                                        viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                    </svg>
+                                    Capture Frame
+                                </button>
+                            </div>
+                        </div>
+
+
+                        <div id="scan-history-mini"
+                            class="absolute bottom-4 right-4 z-0 opacity-50 hover:opacity-100 transition-opacity">
+                            <button
+                                onclick="document.getElementById('analytics-dashboard').scrollIntoView({behavior: 'smooth'})"
+                                class="text-xs text-slate-400 hover:text-emerald-600 flex items-center">
+                                View History
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 ml-1" fill="none"
+                                    viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="lg:col-span-5 flex flex-col h-full space-y-4 overflow-hidden">
+
+
+                <div id="analytics-dashboard"
+                    class="bg-white rounded-2xl shadow-xl border border-slate-200 flex flex-col h-full overflow-hidden">
+                    <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                        <h2 class="text-lg font-bold text-slate-800 flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-emerald-600" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                            </svg>
+                            Real-time Analytics
+                        </h2>
+                        <div class="flex space-x-2">
+                            <div class="flex items-center space-x-1">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                <span class="text-xs text-slate-500 font-medium">LIVE</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-6 overflow-y-auto custom-scrollbar flex-1">
+
+
+                        <div class="grid grid-cols-2 gap-4 mb-6">
+                            <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
+                                <p class="text-xs text-indigo-600 font-bold uppercase tracking-wider mb-1">Top
+                                    Prediction</p>
+                                <p id="mini-top-disease"
+                                    class="text-slate-800 font-bold text-lg truncate leading-tight">-</p>
+                                <p id="mini-top-prob" class="text-indigo-600 font-bold text-2xl mt-1">0%</p>
+                            </div>
+
+                            <div
+                                class="bg-emerald-50 p-4 rounded-xl border border-emerald-100 flex flex-col items-center justify-center relative overflow-hidden">
+                                <p class="text-xs text-emerald-600 font-bold uppercase tracking-wider mb-1 z-10">
+                                    Confidence</p>
+                                <div class="relative z-10">
+                                    <span id="confidence-value" class="text-3xl font-bold text-emerald-700">0%</span>
+                                </div>
+
+                                <div
+                                    class="absolute -bottom-4 -right-4 w-24 h-24 bg-emerald-100 rounded-full opacity-50">
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div class="mb-6">
+                            <h3 class="text-sm font-bold text-slate-600 mb-3">Live Probability Distribution</h3>
+                            <div class="h-48 relative w-full">
+                                <canvas id="probabilityChart"></canvas>
+                            </div>
+                        </div>
+
+
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-600 mb-3">Detailed Breakdown</h3>
+                            <div id="probability-bars" class="space-y-3">
+
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+
+                <div class="bg-white rounded-2xl shadow-md border border-slate-200 overflow-hidden flex-shrink-0">
+                    <div class="px-4 py-3 bg-slate-50 flex justify-between items-center cursor-pointer"
+                        onclick="document.getElementById('history-content').classList.toggle('hidden')">
+                        <h3 class="text-sm font-bold text-slate-600">Session History</h3>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-400" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </div>
+                    <div id="history-content" class="hidden max-h-40 overflow-y-auto p-4 custom-scrollbar">
+                        <div id="scan-history" class="space-y-2 text-sm">
+                            <p class="text-slate-400 italic text-center text-xs">No saved scans yet.</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+
+        <div id="upload-preview-container"
+            class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+                <div class="p-4 border-b border-slate-100 flex justify-between items-center">
+                    <h3 class="text-xl font-bold text-slate-800">Image Analysis Result</h3>
+                    <button onclick="closeUploadPreview()"
+                        class="p-2 hover:bg-slate-100 rounded-full transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-500" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="p-6 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="rounded-xl overflow-hidden shadow-lg border border-slate-200">
+                        <img id="uploaded-image" class="w-full h-auto object-cover" alt="Uploaded analysis">
+                    </div>
+                    <div class="flex flex-col justify-center">
+                        <div id="upload-result-content">
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+
+    <div id="upload-modal"
+        class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-slate-800">Upload Crop Image</h3>
+                <button onclick="closeUploadModal()" class="text-slate-400 hover:text-slate-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <div class="border-2 border-dashed border-emerald-300 rounded-xl p-8 text-center bg-emerald-50 mb-6">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-emerald-500 mb-4" fill="none"
+                    viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                </svg>
+                <p class="text-slate-600 mb-2">Drag & drop or click to upload</p>
+                <p class="text-slate-400 text-sm">Supports JPG, PNG, WebP (Max 5MB)</p>
+                <input type="file" id="image-upload" accept="image/*" class="hidden"
+                    onchange="handleImageUpload(event)">
+                <button onclick="document.getElementById('image-upload').click()"
+                    class="mt-4 px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg transition-all">
+                    Choose File
+                </button>
+            </div>
+
+            <div id="uploaded-file-info" class="hidden">
+                <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg mb-4">
+                    <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-emerald-500 mr-3" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <div>
+                            <p id="uploaded-file-name" class="font-medium text-slate-800"></p>
+                            <p id="uploaded-file-size" class="text-xs text-slate-500"></p>
+                        </div>
+                    </div>
+                    <button onclick="clearUpload()" class="text-red-500 hover:text-red-700">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <button onclick="analyzeUploadedImage()"
+                    class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition-all flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Analyze Image
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+    <script
+        src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+
+    <script type="text/javascript">
+        const URL = "https://teachablemachine.withgoogle.com/models/0xNWo-Qc1/";
+
+        let model, webcam, labelContainer, maxPredictions;
+        let lastLoggedDiagnosis = "";
+        let probabilityChart = null;
+        let classNames = [];
+        let uploadCanvas = null;
+        let uploadedImage = null;
+        let analyticsExpanded = true;
+        let isRunning = false;
+
+
+        const treatments = {
+            "Tomato Blight": {
+                description: "Remove infected leaves and apply a copper-based fungicide. Avoid overhead watering.",
+                severity: "High"
+            },
+            "Healthy Leaf": {
+                description: "Plant looks healthy! Continue regular fertilization and sunlight exposure.",
+                severity: "None"
+            },
+            "Rust Disease": {
+                description: "Improve air circulation. Prune infected parts and treat with sulfur spray.",
+                severity: "Medium"
+            },
+            "Corn Smut": {
+                description: "Remove infected galls immediately before they burst to prevent spreading.",
+                severity: "High"
+            },
+            "Powdery Mildew": {
+                description: "Apply fungicide and improve air circulation. Remove affected leaves.",
+                severity: "Medium"
+            },
+            "Leaf Spot": {
+                description: "Remove infected leaves, avoid overhead watering, apply fungicide.",
+                severity: "Low"
+            }
+        };
+
+        async function init() {
+            const modelURL = URL + "model.json";
+            const metadataURL = URL + "metadata.json";
+
+
+            model = await tmImage.load(modelURL, metadataURL);
+            maxPredictions = model.getTotalClasses();
+            classNames = model.getClassLabels();
+
+            console.log("Model loaded with classes:", classNames);
+        }
+
+        async function initCamera() {
+            try {
+
+                document.getElementById('start-screen').classList.add('hidden');
+                const scannerActive = document.getElementById('scanner-active');
+                scannerActive.classList.remove('hidden');
+                scannerActive.classList.add('flex');
+
+
+                closeUploadModal();
+                closeUploadPreview();
+
+
+                if (!model) {
+                    await init();
+                }
+
+
+                const webcamContainer = document.getElementById("webcam-container");
+                webcamContainer.innerHTML = '';
+
+
+                const flip = true;
+                webcam = new tmImage.Webcam(640, 480, flip);
+                await webcam.setup();
+                await webcam.play();
+
+
+                webcamContainer.appendChild(webcam.canvas);
+
+
+                initAnalytics();
+
+
+                updateInitialProbabilities();
+
+
+                isRunning = true;
+                loop();
+            } catch (error) {
+                console.error("Error initializing camera:", error);
+                alert(`Error initializing camera: ${error.message || error}`);
+                stopCamera();
+            }
+        }
+
+        function stopCamera() {
+            isRunning = false;
+            if (webcam) {
+                webcam.stop();
+                const scannerActive = document.getElementById('scanner-active');
+                scannerActive.classList.add('hidden');
+                scannerActive.classList.remove('flex');
+                document.getElementById('start-screen').classList.remove('hidden');
+            }
+        }
+
+        function closeUploadPreview() {
+            document.getElementById('upload-preview-container').classList.add('hidden');
+        }
+
+        function captureImage() {
+            if (webcam && webcam.canvas) {
+
+                analyzeStaticImage(webcam.canvas);
+            }
+        }
+
+        async function loop() {
+            if (isRunning && webcam && webcam.canvas) {
+                webcam.update();
+                await predict();
+                requestAnimationFrame(loop);
+            }
+        }
+
+        async function predict() {
+            try {
+                const prediction = await model.predict(webcam.canvas);
+                updateProbabilities(prediction);
+                updateAnalytics(prediction);
+
+
+                let highestProb = 0;
+                let bestMatch = "";
+
+                for (let i = 0; i < prediction.length; i++) {
+                    if (prediction[i].probability > highestProb) {
+                        highestProb = prediction[i].probability;
+                        bestMatch = prediction[i].className;
+                    }
+                }
+
+                updateUI(bestMatch, highestProb);
+            } catch (error) {
+                console.error("Prediction error:", error);
+            }
+        }
+
+        async function analyzeStaticImage(imageCanvas) {
+            const prediction = await model.predict(imageCanvas);
+            updateProbabilities(prediction);
+            updateAnalytics(prediction);
+
+            let highestProb = 0;
+            let bestMatch = "";
+
+            for (let i = 0; i < prediction.length; i++) {
+                if (prediction[i].probability > highestProb) {
+                    highestProb = prediction[i].probability;
+                    bestMatch = prediction[i].className;
+                }
+            }
+
+            updateUI(bestMatch, highestProb);
+        }
+
+        function updateInitialProbabilities() {
+            const probabilityBars = document.getElementById('probability-bars');
+            probabilityBars.innerHTML = '';
+
+            classNames.forEach(className => {
+                const bar = document.createElement('div');
+                bar.className = 'animate-fade-in';
+                bar.innerHTML = `
+                <div class="flex justify-between text-sm mb-1">
+                    <span class="font-medium text-slate-700 truncate mr-2">${className}</span>
+                    <span class="font-bold text-slate-500 flex-shrink-0">0%</span>
+                </div>
+                <div class="w-full bg-slate-200 rounded-full h-2.5">
+                    <div class="bg-slate-400 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+            `;
+                probabilityBars.appendChild(bar);
+            });
+        }
+
+        function updateProbabilities(prediction) {
+            const probabilityBars = document.getElementById('probability-bars');
+            probabilityBars.innerHTML = '';
+
+
+            prediction.sort((a, b) => b.probability - a.probability);
+
+            prediction.forEach(p => {
+                const probPercent = (p.probability * 100).toFixed(1);
+                const barColor = p.probability > 0.7 ? 'bg-emerald-500' :
+                    p.probability > 0.4 ? 'bg-amber-500' : 'bg-slate-400';
+                const textColor = p.probability > 0.7 ? 'text-emerald-600' : 'text-slate-500';
+
+                const bar = document.createElement('div');
+                bar.className = 'animate-fade-in';
+                bar.innerHTML = `
+                <div class="flex justify-between text-sm mb-1">
+                    <span class="font-medium text-slate-700 truncate mr-2">${p.className}</span>
+                    <span class="font-bold ${textColor} flex-shrink-0">${probPercent}%</span>
+                </div>
+                <div class="w-full bg-slate-200 rounded-full h-2.5">
+                    <div class="${barColor} h-2.5 rounded-full transition-all duration-300" style="width: ${probPercent}%"></div>
+                </div>
+            `;
+                probabilityBars.appendChild(bar);
+            });
+        }
+
+        function initAnalytics() {
+
+            const chartCtx = document.getElementById('probabilityChart').getContext('2d');
+
+            if (probabilityChart) {
+                probabilityChart.destroy();
+            }
+
+            probabilityChart = new Chart(chartCtx, {
+                type: 'bar',
+                data: {
+                    labels: classNames,
+                    datasets: [{
+                        label: 'Probability (%)',
+                        data: new Array(classNames.length).fill(0),
+                        backgroundColor: 'rgba(16, 185, 129, 0.7)',
+                        borderColor: 'rgb(16, 185, 129)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: 300,
+                        easing: 'easeOutQuart'
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'Probability (%)'
+                            },
+                            grid: {
+                                display: true
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                autoSkip: false,
+                                maxRotation: 45,
+                                minRotation: 45
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return `${context.label}: ${context.parsed.y.toFixed(1)}%`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        let lastChartUpdate = 0;
+        let chartUpdateThrottle = 100;
+
+        function updateAnalytics(prediction) {
+            if (!prediction || prediction.length === 0) return;
+
+            // Sort predictions
+            const sorted = [...prediction].sort((a, b) => b.probability - a.probability);
+            const topResult = sorted[0];
+            const confidencePercent = topResult ? Math.round(topResult.probability * 100) : 0;
+            const bestClass = topResult ? topResult.className : "-";
+
+
+            const confidenceValue = document.getElementById('confidence-value');
+            if (confidenceValue) {
+                confidenceValue.textContent = `${confidencePercent}%`;
+            }
+
+
+            const miniTopDisease = document.getElementById('mini-top-disease');
+            const miniTopProb = document.getElementById('mini-top-prob');
+
+            if (miniTopDisease) miniTopDisease.textContent = bestClass;
+            if (miniTopProb) miniTopProb.textContent = `${confidencePercent}%`;
+
+
+            const now = Date.now();
+            if (probabilityChart && (now - lastChartUpdate > chartUpdateThrottle)) {
+
+                const chartData = classNames.map(className => {
+                    const match = prediction.find(p => p.className === className);
+                    return match ? match.probability * 100 : 0;
+                });
+
+                probabilityChart.data.datasets[0].data = chartData;
+                probabilityChart.update('none');
+                lastChartUpdate = now;
+            }
+        }
+
+        function updateUI(diagnosis, confidence) {
+            const card = document.getElementById('diagnosis-card');
+            const title = document.getElementById('diagnosis-title');
+            const text = document.getElementById('diagnosis-text');
+            const icon = document.getElementById('status-icon');
+            const treatmentDetails = document.getElementById('treatment-details');
+            const treatmentText = document.getElementById('treatment-text');
+
+            if (confidence > 0.5) {
+                card.classList.remove('hidden');
+                title.innerText = diagnosis;
+                text.innerText = `Confidence: ${(confidence * 100).toFixed(1)}%`;
+
+                if (diagnosis.toLowerCase().includes("healthy")) {
+                    icon.innerText = "✅";
+                    icon.className = "text-2xl text-emerald-600";
+                    treatmentDetails.classList.add('hidden');
+                } else {
+                    icon.innerText = "⚠️";
+                    icon.className = "text-2xl text-amber-600";
+
+                    if (treatments[diagnosis]) {
+                        treatmentDetails.classList.remove('hidden');
+                        treatmentText.innerText = treatments[diagnosis].description;
+                    } else {
+                        treatmentDetails.classList.add('hidden');
+                    }
+                }
+
+
+                if (diagnosis !== lastLoggedDiagnosis) {
+                    addToHistory(diagnosis, confidence);
+                    lastLoggedDiagnosis = diagnosis;
+                }
+            } else {
+                card.classList.add('hidden');
+            }
+        }
+
+        function addToHistory(diagnosis, confidence) {
+            const historyContainer = document.getElementById('scan-history');
+            if (historyContainer.innerHTML.includes("No scans")) historyContainer.innerHTML = "";
+
+            const item = document.createElement('div');
+            item.className = "bg-white p-4 rounded-xl border border-slate-200 flex justify-between items-center shadow-sm animate-fade-in";
+
+            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const date = new Date().toLocaleDateString();
+
+            item.innerHTML = `
+            <div class="flex items-center">
+                <div class="mr-3 flex-shrink-0">
+                    ${diagnosis.toLowerCase().includes("healthy") ?
+                    '<span class="text-emerald-500 text-xl">✅</span>' :
+                    '<span class="text-amber-500 text-xl">⚠️</span>'}
+                </div>
+                <div>
+                    <p class="font-bold text-slate-800 text-sm">${diagnosis}</p>
+                    <p class="text-slate-400 text-xs">${date} ${time} • ${(confidence * 100).toFixed(0)}% confidence</p>
+                </div>
+            </div>
+            <span class="text-xs font-bold ${diagnosis.toLowerCase().includes("healthy") ? 'text-emerald-600 bg-emerald-50' : 'text-amber-600 bg-amber-50'} px-2 py-1 rounded">${diagnosis.toLowerCase().includes("healthy") ? 'Healthy' : 'Disease'}</span>
+        `;
+
+            historyContainer.prepend(item);
+
+
+            if (historyContainer.children.length > 10) {
+                historyContainer.removeChild(historyContainer.lastChild);
+            }
+
+
+            saveHistoryToLocalStorage();
+        }
+
+        function saveHistoryToLocalStorage() {
+            const historyContainer = document.getElementById('scan-history');
+            const historyItems = [];
+
+            if (!historyContainer.innerHTML.includes("No scans")) {
+                const items = historyContainer.querySelectorAll('div.bg-white');
+                items.forEach(item => {
+                    const diagnosis = item.querySelector('p.font-bold').textContent;
+                    const details = item.querySelector('p.text-slate-400').textContent;
+                    const timeMatch = details.match(/(\d{1,2}\/\d{1,2}\/\d{4}) (\d{1,2}:\d{2})/);
+                    const confidenceMatch = details.match(/(\d+)% confidence/);
+
+                    historyItems.push({
+                        diagnosis: diagnosis,
+                        date: timeMatch ? timeMatch[1] : '',
+                        time: timeMatch ? timeMatch[2] : '',
+                        confidence: confidenceMatch ? confidenceMatch[1] : '0'
+                    });
+                });
+
+                localStorage.setItem('cropScanHistory', JSON.stringify(historyItems));
+            }
+        }
+
+        function loadHistoryFromLocalStorage() {
+            const historyContainer = document.getElementById('scan-history');
+            const savedHistory = localStorage.getItem('cropScanHistory');
+
+            if (savedHistory) {
+                const historyItems = JSON.parse(savedHistory);
+
+                if (historyItems.length > 0) {
+                    historyContainer.innerHTML = '';
+
+                    historyItems.forEach(item => {
+                        const historyItem = document.createElement('div');
+                        historyItem.className = "bg-white p-4 rounded-xl border border-slate-200 flex justify-between items-center shadow-sm mb-3";
+
+                        historyItem.innerHTML = `
+                        <div class="flex items-center">
+                            <div class="mr-3 flex-shrink-0">
+                                ${item.diagnosis.toLowerCase().includes("healthy") ?
+                                '<span class="text-emerald-500 text-xl">✅</span>' :
+                                '<span class="text-amber-500 text-xl">⚠️</span>'}
+                            </div>
+                            <div>
+                                <p class="font-bold text-slate-800 text-sm">${item.diagnosis}</p>
+                                <p class="text-slate-400 text-xs">${item.date} ${item.time} • ${item.confidence}% confidence</p>
+                            </div>
+                        </div>
+                        <span class="text-xs font-bold ${item.diagnosis.toLowerCase().includes("healthy") ? 'text-emerald-600 bg-emerald-50' : 'text-amber-600 bg-amber-50'} px-2 py-1 rounded">${item.diagnosis.toLowerCase().includes("healthy") ? 'Healthy' : 'Disease'}</span>
+                    `;
+
+                        historyContainer.appendChild(historyItem);
+                    });
+                }
+            }
+        }
+
+        function clearHistory() {
+            if (confirm("Are you sure you want to clear all scan history?")) {
+                const historyContainer = document.getElementById('scan-history');
+                historyContainer.innerHTML = '<p class="text-slate-400 text-sm italic">No scans performed yet.</p>';
+                localStorage.removeItem('cropScanHistory');
+            }
+        }
+
+
+        function openUploadModal() {
+            document.getElementById('upload-modal').classList.remove('hidden');
+        }
+
+        function closeUploadModal() {
+            document.getElementById('upload-modal').classList.add('hidden');
+        }
+
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (file.size > 5 * 1024 * 1024) {
+                alert("File size too large. Please upload an image smaller than 5MB.");
+                return;
+            }
+
+            if (!file.type.match('image.*')) {
+                alert("Please upload an image file (JPG, PNG, WebP).");
+                return;
+            }
+
+            document.getElementById('uploaded-file-name').textContent = file.name;
+            document.getElementById('uploaded-file-size').textContent = formatFileSize(file.size);
+            document.getElementById('uploaded-file-info').classList.remove('hidden');
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                document.getElementById('uploaded-image').src = e.target.result;
+                uploadedImage = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function clearUpload() {
+            document.getElementById('image-upload').value = '';
+            document.getElementById('uploaded-file-info').classList.add('hidden');
+            document.getElementById('uploaded-image').src = '';
+            uploadedImage = null;
+        }
+
+        async function analyzeUploadedImage() {
+            if (!uploadedImage) {
+                alert("Please upload an image first.");
+                return;
+            }
+
+            closeUploadModal();
+            document.getElementById('upload-preview-container').classList.remove('hidden');
+
+            const img = new Image();
+            img.onload = async function () {
+                const canvas = document.createElement('canvas');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0);
+
+                const prediction = await model.predict(canvas);
+                updateProbabilities(prediction);
+                updateAnalytics(prediction);
+
+                let highestProb = 0;
+                let bestMatch = "";
+
+                for (let i = 0; i < prediction.length; i++) {
+                    if (prediction[i].probability > highestProb) {
+                        highestProb = prediction[i].probability;
+                        bestMatch = prediction[i].className;
+                    }
+                }
+
+                updateUI(bestMatch, highestProb);
+
+                const analysisContainer = document.getElementById('upload-result-content');
+                analysisContainer.innerHTML = `
+                <div class="p-4 bg-emerald-50 rounded-xl mb-4 border border-emerald-100">
+                    <h4 class="font-bold text-emerald-800 mb-2 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Analysis Complete
+                    </h4>
+                    <p class="text-emerald-700 text-sm">Image has been successfully analyzed.</p>
+                </div>
+                
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-slate-600 font-medium">Top Prediction:</span>
+                        <span class="text-slate-800 font-bold text-lg">${bestMatch}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-600 font-medium">Confidence:</span>
+                        <span class="text-emerald-600 font-bold">${Math.round(highestProb * 100)}%</span>
+                    </div>
+                </div>
+                
+                <p class="text-slate-500 text-xs mt-4 text-center">Check the main History panel for a permanent record.</p>
+            `;
+            };
+            img.src = uploadedImage;
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+
+        window.onload = async function () {
+            await init();
+            loadHistoryFromLocalStorage();
+
+
+            const uploadArea = document.querySelector('#upload-modal .border-dashed');
+            if (uploadArea) {
+                uploadArea.addEventListener('dragover', function (e) {
+                    e.preventDefault();
+                    this.classList.add('border-emerald-500', 'bg-emerald-100');
+                });
+
+                uploadArea.addEventListener('dragleave', function (e) {
+                    e.preventDefault();
+                    this.classList.remove('border-emerald-500', 'bg-emerald-100');
+                });
+
+                uploadArea.addEventListener('drop', function (e) {
+                    e.preventDefault();
+                    this.classList.remove('border-emerald-500', 'bg-emerald-100');
+
+                    const files = e.dataTransfer.files;
+                    if (files.length > 0) {
+                        const fileInput = document.getElementById('image-upload');
+                        fileInput.files = files;
+                        const event = new Event('change', { bubbles: true });
+                        fileInput.dispatchEvent(event);
+                    }
+                });
+            }
+
+
+            setTimeout(() => {
+                initCamera();
+            }, 500);
+        };
+    </script>
+</body>
+
+</html>
